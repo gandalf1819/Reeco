@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  DynamoDbDatabase:
+    Type: AWS::Serverless::SimpleTable
+  InputValidatorAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        'Fn::Transform':
+          Name: 'AWS::Include'
+          # Replace <bucket> with your bucket name
+          Parameters:
+            Location: s3://cc-chatbot-niknar/swagger.yaml
+  LF0:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: s3://cc-chatbot-niknar/lambda-functions.zip
+      Handler: lex_input_validator.handler
+      Events:
+        ValidateInputAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref InputValidatorAPI
+            Path: /chatbot
+            Method: post  
+    
