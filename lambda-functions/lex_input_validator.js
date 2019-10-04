@@ -1,12 +1,40 @@
 'use strict';
 
-console.log('Loading function');
+var AWS = require('aws-sdk')
 
 exports.handler = (event, context, callback) => {
-    //console.log('Received event:', JSON.stringify(event, null, 2));
-    console.log('value1 =', event.key1);
-    console.log('value2 =', event.key2);
-    console.log('value3 =', event.key3);
-    callback(null, event.key1);  // Echo back the first key value
-    //callback('Something went wrong');
+
+    let message = JSON.parse(event.body).message,
+        userId = JSON.parse(event.body).userId,
+        responseBody = {
+            statusCode: 200
+        }
+
+    let lexRunTime = new AWS.LexRuntime();
+    let params = {
+        botAlias: 'reeco',
+        botName: 'Reeco',
+        inputText: message,
+        userId: userId
+    }
+
+    let promise = new Promise((resolve, reject) => {
+        lexRunTime.postText(params, function (err, data) {
+            if (err) {
+                console.log("err =", err)
+                responseBody.statusCode = 500
+                responseBody.message = "Did not get a response from Lex"
+                resolve(responseBody)
+            }
+            console.log("message received from Lex =", data)
+            responseBody.message = data
+            resolve(responseBody)
+        })
+    })
+
+    promise.then((responseBody) => {
+        callback(null, {
+            body: JSON.stringify(responseBody)
+        })
+    })
 };

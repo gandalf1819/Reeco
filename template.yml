@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Resources:
+Resources:  
   DynamoDbDatabase:
     Type: AWS::Serverless::SimpleTable
   InputValidatorAPI:
@@ -10,7 +10,6 @@ Resources:
       DefinitionBody:
         'Fn::Transform':
           Name: 'AWS::Include'
-          # Replace <bucket> with your bucket name
           Parameters:
             Location: s3://cc-chatbot-niknar/swagger.yaml
   LF0:
@@ -25,5 +24,15 @@ Resources:
           Properties:
             RestApiId: !Ref InputValidatorAPI
             Path: /chatbot
-            Method: post  
+            Method: post
+      Policies:
+        - AmazonLexRunBotsOnly
+        - CloudWatchLogsFullAccess      
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"            
+            
     
