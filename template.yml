@@ -27,7 +27,43 @@ Resources:
             Method: post
       Policies:
         - AmazonLexRunBotsOnly
-        - CloudWatchLogsFullAccess      
+        - CloudWatchLogsFullAccess
+  # Logic will be changed      
+  LF1:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: s3://cc-chatbot-niknar/lambda-functions.zip
+      Handler: lex_input_validator.handler
+  # Logic will be changed    
+  LF2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: s3://cc-chatbot-niknar/lambda-functions.zip
+      Handler: lex_input_validator.handler
+  # Sample for SQS, to be changed    
+  SQSQueue:
+    Type: AWS::SQS::Queue
+  # Sample for Elasticsearch, to be changed
+  ElasticSearchInstance:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: "test"
+      ElasticsearchClusterConfig:
+        DedicatedMasterEnabled: "true"
+        InstanceCount: "2"
+        ZoneAwarenessEnabled: "true"
+        InstanceType: "m3.medium.elasticsearch"
+        DedicatedMasterType: "m3.medium.elasticsearch"
+        DedicatedMasterCount: "3"
+      EBSOptions:
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 20
+        VolumeType: "gp2"
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: "0"                 
 Globals:
   Api:
     Cors:
