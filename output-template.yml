@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
-Resources:  
+Transform: AWS::Serverless-2016-10-31
+Resources:
   DynamoDbDatabase:
     Type: AWS::Serverless::SimpleTable
   InputValidatorAPI:
@@ -8,67 +8,62 @@ Resources:
     Properties:
       StageName: Prod
       DefinitionBody:
-        'Fn::Transform':
-          Name: 'AWS::Include'
+        Fn::Transform:
+          Name: AWS::Include
           Parameters:
             Location: s3://cc-chatbot-niknar/swagger.yaml
   LF0:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: ./lambda-functions
+      CodeUri: s3://cc-chatbot-niknar/161ba791469781ffa3ff2fac9b38332d
       Handler: lex_input_validator.handler
       Events:
         ValidateInputAPI:
           Type: Api
           Properties:
-            RestApiId: !Ref InputValidatorAPI
+            RestApiId:
+              Ref: InputValidatorAPI
             Path: /chatbot
             Method: post
       Policies:
-        - AmazonLexRunBotsOnly
-        - CloudWatchLogsFullAccess
-  # Logic will be changed      
+      - AmazonLexRunBotsOnly
+      - CloudWatchLogsFullAccess
   LF1:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: ./lambda-functions
+      CodeUri: s3://cc-chatbot-niknar/161ba791469781ffa3ff2fac9b38332d
       Handler: lex_input_validator.handler
-  # Logic will be changed    
   LF2:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: ./lambda-functions
+      CodeUri: s3://cc-chatbot-niknar/161ba791469781ffa3ff2fac9b38332d
       Handler: lex_input_validator.handler
-  # Sample for SQS, to be changed    
   SQSQueue:
     Type: AWS::SQS::Queue
-  # Sample for Elasticsearch, to be changed
   ElasticSearchInstance:
     Type: AWS::Elasticsearch::Domain
     Properties:
-      DomainName: "test"
+      DomainName: test
       ElasticsearchClusterConfig:
-        DedicatedMasterEnabled: "true"
-        InstanceCount: "2"
-        ZoneAwarenessEnabled: "true"
-        InstanceType: "m3.medium.elasticsearch"
-        DedicatedMasterType: "m3.medium.elasticsearch"
-        DedicatedMasterCount: "3"
+        DedicatedMasterEnabled: 'true'
+        InstanceCount: '2'
+        ZoneAwarenessEnabled: 'true'
+        InstanceType: m3.medium.elasticsearch
+        DedicatedMasterType: m3.medium.elasticsearch
+        DedicatedMasterCount: '3'
       EBSOptions:
         EBSEnabled: true
         Iops: 0
         VolumeSize: 20
-        VolumeType: "gp2"
+        VolumeType: gp2
       SnapshotOptions:
-        AutomatedSnapshotStartHour: "0"                 
+        AutomatedSnapshotStartHour: '0'
 Globals:
   Api:
     Cors:
-      AllowMethods: "'*'"
-      AllowHeaders: "'*'"
-      AllowOrigin: "'*'"            
-            
-    
+      AllowMethods: '''*'''
+      AllowHeaders: '''*'''
+      AllowOrigin: '''*'''
