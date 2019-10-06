@@ -50,7 +50,8 @@ Resources:
             Queue: !GetAtt SQSQueue.Arn
             BatchSize: 10
       Policies:
-        - CloudWatchLogsFullAccess      
+        - CloudWatchLogsFullAccess
+        - AmazonSNSFullAccess      
 
   # Sample for SQS, to be changed    
   SQSQueue:
