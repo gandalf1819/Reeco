@@ -85,7 +85,7 @@ const recommendRestaurantsToUsers = (users, cuisineToRestaurantsMapping, restaur
 }
 
 const generateMessage = (user) => {
-    let message = `Hello! Here are my ${user.cuisine} restaurant suggestions for ${user.people}, for ${user.date} at ${user.time} hrs. `
+    let message = `Hello! Here are my ${user.cuisine} restaurant suggestions for ${user.people} people, for ${user.date} at ${user.time} hrs. `
 
     user.restaurants.forEach((restaurant, index) => {
         message += ` ${index + 1}. ${restaurant.name}, located at ${restaurant.address}, ${restaurant.zipcode}.`
