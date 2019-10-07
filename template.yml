@@ -1,8 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:  
-  DynamoDbDatabase:
-    Type: AWS::Serverless::SimpleTable
+  # DynamoDbDatabase:
+  #   Type: AWS::Serverless::SimpleTable
   InputValidatorAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -32,9 +32,9 @@ Resources:
   LF1:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs10.x
+      Runtime: python3.7
       CodeUri: ./lambda-functions
-      Handler: lex_input_validator.handler
+      Handler: lex_response_handler.lambda_handler
 
   # Logic will be changed    
   LF2:

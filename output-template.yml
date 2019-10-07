@@ -1,8 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  DynamoDbDatabase:
-    Type: AWS::Serverless::SimpleTable
   InputValidatorAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -16,7 +14,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/161ba791469781ffa3ff2fac9b38332d
+      CodeUri: s3://cc-chatbot-niknar/af34c22b2081a3d8e356db831a46f44d
       Handler: lex_input_validator.handler
       Events:
         ValidateInputAPI:
@@ -32,35 +30,29 @@ Resources:
   LF1:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/161ba791469781ffa3ff2fac9b38332d
-      Handler: lex_input_validator.handler
+      Runtime: python3.7
+      CodeUri: s3://cc-chatbot-niknar/af34c22b2081a3d8e356db831a46f44d
+      Handler: lex_response_handler.lambda_handler
   LF2:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/161ba791469781ffa3ff2fac9b38332d
-      Handler: lex_input_validator.handler
+      CodeUri: s3://cc-chatbot-niknar/af34c22b2081a3d8e356db831a46f44d
+      Handler: send_notifications.handler
+      Events:
+        SQSPollingEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - SQSQueue
+              - Arn
+            BatchSize: 10
+      Policies:
+      - CloudWatchLogsFullAccess
+      - AmazonSNSFullAccess
   SQSQueue:
     Type: AWS::SQS::Queue
-  ElasticSearchInstance:
-    Type: AWS::Elasticsearch::Domain
-    Properties:
-      DomainName: test
-      ElasticsearchClusterConfig:
-        DedicatedMasterEnabled: 'true'
-        InstanceCount: '2'
-        ZoneAwarenessEnabled: 'true'
-        InstanceType: m3.medium.elasticsearch
-        DedicatedMasterType: m3.medium.elasticsearch
-        DedicatedMasterCount: '3'
-      EBSOptions:
-        EBSEnabled: true
-        Iops: 0
-        VolumeSize: 20
-        VolumeType: gp2
-      SnapshotOptions:
-        AutomatedSnapshotStartHour: '0'
 Globals:
   Api:
     Cors:
