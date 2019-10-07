@@ -1,8 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:  
-  DynamoDbDatabase:
-    Type: AWS::Serverless::SimpleTable
+  # DynamoDbDatabase:
+  #   Type: AWS::Serverless::SimpleTable
   InputValidatorAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -16,7 +16,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/lambda-functions.zip
+      CodeUri: ./lambda-functions
       Handler: lex_input_validator.handler
       Events:
         ValidateInputAPI:
@@ -32,38 +32,49 @@ Resources:
   LF1:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/lambda-functions.zip
-      Handler: lex_input_validator.handler
+      Runtime: python3.7
+      CodeUri: ./lambda-functions
+      Handler: lex_response_handler.lambda_handler
+
   # Logic will be changed    
   LF2:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/lambda-functions.zip
-      Handler: lex_input_validator.handler
+      CodeUri: ./lambda-functions
+      Handler: send_notifications.handler
+      Events:
+        SQSPollingEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SQSQueue.Arn
+            BatchSize: 10
+      Policies:
+        - CloudWatchLogsFullAccess
+        - AmazonSNSFullAccess      
+
   # Sample for SQS, to be changed    
   SQSQueue:
-    Type: AWS::SQS::Queue
+    Type: AWS::SQS::Queue  
   # Sample for Elasticsearch, to be changed
-  ElasticSearchInstance:
-    Type: AWS::Elasticsearch::Domain
-    Properties:
-      DomainName: "test"
-      ElasticsearchClusterConfig:
-        DedicatedMasterEnabled: "true"
-        InstanceCount: "2"
-        ZoneAwarenessEnabled: "true"
-        InstanceType: "m3.medium.elasticsearch"
-        DedicatedMasterType: "m3.medium.elasticsearch"
-        DedicatedMasterCount: "3"
-      EBSOptions:
-        EBSEnabled: true
-        Iops: 0
-        VolumeSize: 20
-        VolumeType: "gp2"
-      SnapshotOptions:
-        AutomatedSnapshotStartHour: "0"                 
+  # ElasticSearchInstance:
+  #   Type: AWS::Elasticsearch::Domain
+  #   Properties:
+  #     DomainName: "test"
+  #     ElasticsearchClusterConfig:
+  #       DedicatedMasterEnabled: "true"
+  #       InstanceCount: "2"
+  #       ZoneAwarenessEnabled: "true"
+  #       InstanceType: "m3.medium.elasticsearch"
+  #       DedicatedMasterType: "m3.medium.elasticsearch"
+  #       DedicatedMasterCount: "3"
+  #     EBSOptions:
+  #       EBSEnabled: true
+  #       Iops: 0
+  #       VolumeSize: 20
+  #       VolumeType: "gp2"
+  #     SnapshotOptions:
+  #       AutomatedSnapshotStartHour: "0"                 
 Globals:
   Api:
     Cors:

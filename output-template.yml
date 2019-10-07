@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  InputValidatorAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://cc-chatbot-niknar/swagger.yaml
+  LF0:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: s3://cc-chatbot-niknar/af34c22b2081a3d8e356db831a46f44d
+      Handler: lex_input_validator.handler
+      Events:
+        ValidateInputAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: InputValidatorAPI
+            Path: /chatbot
+            Method: post
+      Policies:
+      - AmazonLexRunBotsOnly
+      - CloudWatchLogsFullAccess
+  LF1:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.7
+      CodeUri: s3://cc-chatbot-niknar/af34c22b2081a3d8e356db831a46f44d
+      Handler: lex_response_handler.lambda_handler
+  LF2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: s3://cc-chatbot-niknar/af34c22b2081a3d8e356db831a46f44d
+      Handler: send_notifications.handler
+      Events:
+        SQSPollingEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - SQSQueue
+              - Arn
+            BatchSize: 10
+      Policies:
+      - CloudWatchLogsFullAccess
+      - AmazonSNSFullAccess
+  SQSQueue:
+    Type: AWS::SQS::Queue
+Globals:
+  Api:
+    Cors:
+      AllowMethods: '''*'''
+      AllowHeaders: '''*'''
+      AllowOrigin: '''*'''
