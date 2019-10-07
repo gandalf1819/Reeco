@@ -16,16 +16,13 @@ with open("cuisines-yelp.json") as json_file:
         display_phone = restaurant['display_phone']
         distance = restaurant['distance']
         id = restaurant['id']
-        image_url = restaurant['image_url']
         is_closed = restaurant['is_closed']
         location = restaurant['location']
         name = restaurant['name']
         phone = restaurant['phone']
-        price = restaurant['price']
         rating = restaurant['rating']
         review_count = restaurant['review_count']
-        transactions = restaurant['transactions']
-        url = restaurant['url']
+        # transactions = restaurant['transactions']
 
         # print("Adding movie:", year, title)
 
@@ -37,15 +34,11 @@ with open("cuisines-yelp.json") as json_file:
                'display_phone': display_phone,
                'distance': distance,
                'id': id,
-               'image_url': image_url,
                'is_closed':is_closed,
                'location': location,
                'name': name,
                'phone': phone,
-               'price': price,
                'rating': rating,
                'review_count': review_count,
-               'transactions': transactions,
-               'url': url
             }
         )

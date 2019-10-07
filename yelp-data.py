@@ -13,6 +13,7 @@ BUSINESS_PATH = '/v3/businesses/'  # Business ID will come after slash.
 location = ['Brooklyn','Bronx']
 term="restaurants"
 headers = {'Authorization': 'Bearer %s' % API_KEY}
+
 def suggest(location,off):
 	params={"term":term,"location":"Manhattan","limit":50,"offset":off,"categories":"Indian,American"}
 	return requests.get(API_HOST+SEARCH_PATH,params=params,headers=headers).json()["businesses"]
