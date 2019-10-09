@@ -1,19 +1,17 @@
 {
-  "name": "socket.io-chat",
+  "name": "Reeco",
   "version": "0.0.0",
-  "description": "A simple chat client using socket.io",
-  "main": "index.js",
-  "author": "Grant Timmerman",
+  "description": "Reeco is a 'Dining Concierge' chatbot, that sends you restaurant suggestions given a set of preferences that you provide the chatbot withthrough conversation",
+  "main": "js/main.js",
+  "author": "Chinmay Wyawahare",
   "private": true,
   "license": "BSD",
   "dependencies": {
     "aws-api-gateway-client": "^0.2.17",
-    "aws-sdk": "^2.536.0",
-    "express": "^4.17.1",
     "socket.io": "2.0.4",
     "url-template": "^2.0.8"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node js/main.js"
   }
 }

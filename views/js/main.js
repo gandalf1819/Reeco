@@ -1,3 +1,6 @@
+var port = process.env.PORT || 3000;
+var apigClientFactory = require('aws-api-gateway-client').default;
+
 (function() {
   var FADE_TIME = 150; // ms
   var TYPING_TIMER_LENGTH = 400; // ms
@@ -18,22 +21,34 @@
 
   // Prompt for setting a username
   var username;
-  var user; // user for API gateway
   var usernum = Math.floor(Math.random()*90000) + 10000; // user number for API gateway
-  var msg; // message for API gateway
   var connected = false;
-  var typing = false;
+  var typing = true;
   var lastTypingTime;
   var $currentInput = $usernameInput.focus();
 
   var apigClient = apigClientFactory.newClient();
 
-  function chatbotResponse() {
+  // get Message from the front-end
+  function getUserMessage() {
+
+    var message = $inputMessage.val();
+    message = cleanInput(message);
+    
+    $('<li class="sent"><p>' + message + '</p></li>').appendTo($('.messages ul'));
+    $('.inputMessage input').val(null);
+    // $('.contact.active .preview').html('<span>You: </span>' + message);
+
+    return message;
+  }
+
+  function reecoResponse() {
 		
 		// User's own message for display
 		userMsg = getUserMessage();
 
 		return new Promise(function (resolve, reject) {
+      typing = true
 			let params = {};
 			let additionalParams = {
 				headers: {
@@ -48,27 +63,27 @@
 			apigClient.chatbotPost(params, body, additionalParams)
 			.then(function(result){
 				
-				reply = result.data.body;
+        reply = result.data.body;
+        
+        $('<li class="sent"><p>' + message + '</p></li>').appendTo($('.messages ul'));
+        $('.inputMessage input').val(null);
 		
 				resolve(result.data.body);
-				botMessage = result.data.body;
+        botResponse = result.data.body;
+        
 			}).catch( function(result){
-				// Add error callback code here.
+
 				console.log(result);
-				botMessage = "Couldn't establish connection to API gateway"
+				botResponse = "Couldn't establish connection to API gateway"
 				reject(result);
 			});
 		})
   }
-  
-  // get Message from the console
-  function getUserMessage() {
 
-  var message = $inputMessage.val();
-  message = cleanInput(message);
-  
-  return message;
-};
+  $('.submit').click(function() {
+    // newMessage();
+    reecoResponse();
+  });
 
   // function to maintain count of number of participants
   function addParticipantsMessage (data) {
@@ -81,20 +96,6 @@
     log(message);
   }
 
-  // function to pass username and message to API gateway
-  var userCred = {
-    userInfo : function() {
-      user = cleanInput($usernameInput.val().trim()),
-      usernum = usernum + 1
-      log(user);
-      // log(usernum);
-    },
-    userMessage: function() {
-      msg = $inputMessage.val(),
-      msg = cleanInput(message),
-      log(msg);
-    }
-  }
 
   // Sets the client's username
   function setUsername () {
@@ -111,21 +112,21 @@
   }
 
   // Sends a chat message
-  function sendMessage () {
-    var message = $inputMessage.val();
-    // Prevent markup from being injected into the message
-    message = cleanInput(message);
-    // if there is a non-empty message and a socket connection
-    if (message && connected) {
-      $inputMessage.val('');
-      addChatMessage({
-        username: username,
-        message: message
-      });
-      // tell server to execute 'new message' and send along one parameter
-      socket.emit('new message', message);
-    }
-  }
+  // function sendMessage () {
+  //   var message = $inputMessage.val();
+  //   // Prevent markup from being injected into the message
+  //   message = cleanInput(message);
+  //   // if there is a non-empty message and a socket connection
+  //   if (message && connected) {
+  //     $inputMessage.val('');
+  //     addChatMessage({
+  //       username: username,
+  //       message: message
+  //     });
+  //     // tell server to execute 'new message' and send along one parameter
+  //     socket.emit('new message', message);
+  //   }
+  // }
 
   // Log a message
   function log (message, options) {
@@ -236,35 +237,35 @@
   }
 
   // Gets the color of a username through our hash function
-  function getUsernameColor (username) {
-    // Compute hash code
-    var hash = 7;
-    for (var i = 0; i < username.length; i++) {
-       hash = username.charCodeAt(i) + (hash << 5) - hash;
-    }
-    // Calculate color
-    var index = Math.abs(hash % COLORS.length);
-    return COLORS[index];
-  }
+  // function getUsernameColor (username) {
+  //   // Compute hash code
+  //   var hash = 7;
+  //   for (var i = 0; i < username.length; i++) {
+  //      hash = username.charCodeAt(i) + (hash << 5) - hash;
+  //   }
+  //   // Calculate color
+  //   var index = Math.abs(hash % COLORS.length);
+  //   return COLORS[index];
+  // }
 
   // Keyboard events
 
-  $window.keydown(function (event) {
-    // Auto-focus the current input when a key is typed
-    if (!(event.ctrlKey || event.metaKey || event.altKey)) {
-      $currentInput.focus();
-    }
-    // When the client hits ENTER on their keyboard
-    if (event.which === 13) {
-      if (username) {
-        sendMessage();
-        socket.emit('stop typing');
-        typing = false;
-      } else {
-        setUsername();
-      }
-    }
-  });
+  // $window.keydown(function (event) {
+  //   // Auto-focus the current input when a key is typed
+  //   if (!(event.ctrlKey || event.metaKey || event.altKey)) {
+  //     $currentInput.focus();
+  //   }
+  //   // When the client hits ENTER on their keyboard
+  //   if (event.which === 13) {
+  //     if (username) {
+  //       sendMessage();
+  //       socket.emit('stop typing');
+  //       typing = false;
+  //     } else {
+  //       setUsername();
+  //     }
+  //   }
+  // });
 
   $inputMessage.on('input', function() {
     updateTyping();
