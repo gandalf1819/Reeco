@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Socket.IO Chat Example</title>
+  <!-- <link rel="stylesheet" type="text/css" href="public/style.css"> -->
+  <link rel="stylesheet"  src="http://cc-chatbot-niknar.s3-website.us-east-1.amazonaws.com/Reeco/public/style.css">
+</head>
+<body>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.414.0.min.js"></script>
+  <!-- <script rel="stylesheet" type="text/css" src="http://cc-chatbot-niknar.s3-website.us-east-1.amazonaws.com/Reeco/public/style.css"></script> -->
+  <!-- <script type="text/css" rel="stylesheet" href="public/style.css"></script> -->
+  <script type="text/javascript" src="apiJs/lib/axios/dist/axios.standalone.js"></script>
+  <script type="text/javascript" src="apiJs/lib/CryptoJS/rollups/hmac-sha256.js"></script>
+  <script type="text/javascript" src="apiJs/lib/CryptoJS/rollups/sha256.js"></script>
+  <script type="text/javascript" src="apiJs/lib/CryptoJS/components/hmac.js"></script>
+  <script type="text/javascript" src="apiJs/lib/CryptoJS/components/enc-base64.js"></script>
+  <script type="text/javascript" src="apiJs/lib/url-template/url-template.js"></script>
+  <script type="text/javascript" src="apiJs/lib/apiGatewayCore/sigV4Client.js"></script>
+  <script type="text/javascript" src="apiJs/lib/apiGatewayCore/apiGatewayClient.js"></script>
+  <script type="text/javascript" src="apiJs/lib/apiGatewayCore/simpleHttpClient.js"></script>
+  <script type="text/javascript" src="apiJs/lib/apiGatewayCore/utils.js"></script>
+  <script type="text/javascript" src="apiJs/apigClient.js"></script>
+  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="apiJs/main.js"></script>
+  <ul class="pages">
+    <li class="chat page">
+      <div class="chatArea">
+        <ul class="messages"></ul>
+      </div>
+      <input class="inputMessage" placeholder="Type here..."/>
+    </li>
+    <li class="login page">
+      <div class="form">
+        <h3 class="title">What's your nickname?</h3>
+        <input class="usernameInput" type="text" maxlength="14" />
+      </div>
+    </li>
+  </ul>
+
+  
+</body>
+</html>
