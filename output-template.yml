@@ -14,7 +14,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/4dee54f1f643f47066b041a629d58db1
+      CodeUri: s3://cc-chatbot-niknar/2615f5b1638a58c37f6688763b6a665b
       Handler: lex_input_validator.handler
       Events:
         ValidateInputAPI:
@@ -31,13 +31,13 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: python3.7
-      CodeUri: s3://cc-chatbot-niknar/4dee54f1f643f47066b041a629d58db1
+      CodeUri: s3://cc-chatbot-niknar/2615f5b1638a58c37f6688763b6a665b
       Handler: lex_response_handler.lambda_handler
   LF2:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/4dee54f1f643f47066b041a629d58db1
+      CodeUri: s3://cc-chatbot-niknar/2615f5b1638a58c37f6688763b6a665b
       Handler: send_notifications.handler
       Events:
         SQSPollingEvent:

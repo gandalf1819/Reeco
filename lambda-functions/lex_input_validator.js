@@ -6,9 +6,8 @@ exports.handler = (event, context, callback) => {
 
     let message = JSON.parse(event.body).message,
         userId = JSON.parse(event.body).userId,
-        responseBody = {
-            statusCode: 200
-        }
+        responseBody = {},
+        statusCode = 200
 
     let lexRunTime = new AWS.LexRuntime();
     let params = {
@@ -22,7 +21,7 @@ exports.handler = (event, context, callback) => {
         lexRunTime.postText(params, function (err, data) {
             if (err) {
                 console.log("err =", err)
-                responseBody.statusCode = 500
+                statusCode = 500
                 responseBody.message = "Did not get a response from Lex"
                 resolve(responseBody)
             }
@@ -34,6 +33,11 @@ exports.handler = (event, context, callback) => {
 
     promise.then((responseBody) => {
         callback(null, {
+            statusCode: statusCode,
+            headers: {
+                "content-type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
             body: JSON.stringify(responseBody)
         })
     })
