@@ -1,49 +1,67 @@
 var outputArea = $("#chat-output");
 
 $("#user-input-form").on("submit", function (e) {
-  console.log("user input")
+  message = $(".user-input").val();
+  console.log("User input : ", message)
   e.preventDefault();
 
-  var message = $("#user-input").val();
-
-  outputArea.append(`
-    <div class='bot-message'>
-      <div class='message'>
-        ${message}
-      </div>
-    </div>
-  `);
-
+  // Call AWS SDK using apigClient.js
   var apigClient = apigClientFactory.newClient();
 
   var params = {};
 
+  lastUserMessage = userMessage();
+  console.log("Last User Message : ", lastUserMessage)
+
   var body = {
     "userId": "12345",
-    "message": "Hello"
+    "message": lastUserMessage
   };
 
   var additionalParams = {};
 
   apigClient.chatbotPost(params, body, additionalParams)
     .then(function (result) {
-      console.log("result============", result)
-      // Add success callback code here.
+		reply = result.data.message.message;
+		console.log("result ======", reply)
+
+		outputArea.append(`
+			<div class='bot-message'>
+		        <div class='message'>
+				${reply}
+				</div>
+			</div>
+    	`);
+
+		$(".user-input").val(null);
+		botMessage = result.data.message.message;
+		console.log("Bot Message: "+ botMessage);
+		resolve(botMessage);
+
     }).catch(function (result) {
-      console.log("error================", result)
-      // Add error callback code here.
+	  // Add error callback code here
+	  	console.log("Error : ", result);
+		botMessage = "Couldn't establish connection to API Gateway"
+		reject(result);
     });
 
-  setTimeout(function () {
-    outputArea.append(`
-      <div class='user-message'>
-        <div class='message'>
-          I'm like 20 lines of JavaScript I can't actually talk to you.
-        </div>
-      </div>
-    `);
-  }, 250);
+	function userMessage() {
 
-  $("#user-input").val("");
+		// Get user input from front-end
+		message = $(".user-input").val();
+		console.log("User input : ", message)
+	
+		$(message).appendTo($('.user-message'));
+		$(".user-input").val(null);
 
+		outputArea.append(`
+			<div class='user-message'>
+				<div class='message'>
+				${message}
+				</div>
+			</div>
+    	`);
+	
+		return message;
+	};
 });
