@@ -24,7 +24,7 @@ def send_signed(method, url, service='es', region='us-east-1', body=None):
     fn(url, auth=auth, data=body,
        headers={"Content-Type":"application/json"})
 
-# ElasticSearch Endpoint
+# AWS ElasticSearch Endpoint
 url = 'https://search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com/restaurant/restaurants'
 
 new_dict = []
