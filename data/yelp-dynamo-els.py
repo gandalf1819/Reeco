@@ -25,8 +25,9 @@ def send_signed(method, url, service='es', region='us-east-1', body=None):
        headers={"Content-Type":"application/json"})
 
 # ElasticSearch Endpoint
-url = 'https://search-reeco-els-chuprjnjrsyq22ofm7nrjy3gce.us-east-1.es.amazonaws.com/restaurant/restaurants'
+url = 'https://search-els-reeco-qzbiecanj3cljsqcypswmomeiy.us-east-1.es.amazonaws.com/restaurant/restaurants'
 
+new_dict = []
 #  DynamoDB fields : Business ID, Name, Address, Coordinates, Number of Reviews, Rating, Zip Code
 with open("cuisines-yelp.json") as json_file:
     restaurants = json.load(json_file, parse_float=decimal.Decimal)
@@ -66,7 +67,6 @@ with open("cuisines-yelp.json") as json_file:
         # ELS alterations
         currentRest = {"id": restaurant["id"], "cuisine": restaurant["categories"]}
         cuisines = []
-        new_dict = []
         for item in currentRest["cuisine"]:
             cuisines.append(item["title"])
 
