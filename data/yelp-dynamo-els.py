@@ -25,7 +25,7 @@ def send_signed(method, url, service='es', region='us-east-1', body=None):
        headers={"Content-Type":"application/json"})
 
 # ElasticSearch Endpoint
-url = 'https://search-els-reeco-qzbiecanj3cljsqcypswmomeiy.us-east-1.es.amazonaws.com/restaurant/restaurants'
+url = 'https://search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com/restaurant/restaurants'
 
 new_dict = []
 #  DynamoDB fields : Business ID, Name, Address, Coordinates, Number of Reviews, Rating, Zip Code
