@@ -97,9 +97,10 @@ const generateMessage = (user) => {
 }
 
 exports.handler = (event, context, callback) => {
-
+    console.log("Event received in LF2")
+    console.log(event)
     const records = event.Records
-
+    console.log("Number of records: " + records.length)
     let cuisines = new Set(),
         users = [],
         cuisineToRestaurantsMapping = {},
@@ -116,6 +117,7 @@ exports.handler = (event, context, callback) => {
                 "people": userQueries.People,
                 "date": userQueries.Date,
                 "time": userQueries.Time,
+                "location": userQueries.Location,
                 "restaurants": []
             }
             users.push(user)
