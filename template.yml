@@ -35,6 +35,8 @@ Resources:
       Runtime: python3.7
       CodeUri: ./lambda-functions
       Handler: lex_response_handler.lambda_handler
+    Policies:
+      - AmazonSQSFullAccess
 
   # Logic will be changed    
   LF2:
@@ -55,7 +57,10 @@ Resources:
 
   # Sample for SQS, to be changed    
   SQSQueue:
-    Type: AWS::SQS::Queue  
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: "SQSQueue"
+
   # Sample for Elasticsearch, to be changed
   # ElasticSearchInstance:
   #   Type: AWS::Elasticsearch::Domain
