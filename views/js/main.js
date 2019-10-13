@@ -8,42 +8,44 @@ $("#user-input-form").on("submit", function (e) {
   // Call AWS SDK using apigClient.js
   var apigClient = apigClientFactory.newClient();
 
-  var params = {};
+  return new Promise(function (resolve, reject) {
 
-  lastUserMessage = userMessage();
-  console.log("Last User Message : ", lastUserMessage)
+	var params = {};
+	lastUserMessage = userMessage();
+	console.log("Last User Message : ", lastUserMessage)
 
-  var body = {
-    "userId": "12345",
-    "message": lastUserMessage
-  };
+	var body = {
+		"userId": "12345",
+		"message": lastUserMessage
+	};
 
-  var additionalParams = {};
+	var additionalParams = {};
 
-  apigClient.chatbotPost(params, body, additionalParams)
-    .then(function (result) {
-		reply = result.data.message.message;
-		console.log("result ======", reply)
+	apigClient.chatbotPost(params, body, additionalParams)
+		.then(function (result) {
+			reply = result.data.message.message;
+			console.log("result ======", reply)
 
-		outputArea.append(`
-			<div class='bot-message'>
-		        <div class='message'>
-				${reply}
+			outputArea.append(`
+				<div class='bot-message'>
+					<div class='message'>
+					${reply}
+					</div>
 				</div>
-			</div>
-    	`);
+			`);
 
-		$(".user-input").val(null);
-		botMessage = result.data.message.message;
-		console.log("Bot Message: "+ botMessage);
-		resolve(botMessage);
+			$(".user-input").val(null);
+			botMessage = result.data.message.message;
+			console.log("Bot Message: "+ botMessage);
+			resolve(botMessage);
 
-    }).catch(function (result) {
-	  // Add error callback code here
-	  	console.log("Error : ", result);
-		botMessage = "Couldn't establish connection to API Gateway"
-		reject(result);
-    });
+		}).catch(function (result) {
+		// Add error callback code here
+			console.log("Error : ", result);
+			botMessage = "Couldn't establish connection to API Gateway"
+			reject(result);
+		});
+	})
 
 	function userMessage() {
 
