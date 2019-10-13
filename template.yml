@@ -53,7 +53,8 @@ Resources:
             BatchSize: 10
       Policies:
         - CloudWatchLogsFullAccess
-        - AmazonSNSFullAccess      
+        - AmazonSNSFullAccess
+        - AmazonDynamoDBReadOnlyAccess
 
   # Sample for SQS, to be changed    
   SQSQueue:
