@@ -7,14 +7,12 @@ let domain = 'search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com
 
 const getRestaurantIdsByCuisine = (cuisines) => {
     return new Promise((resolve, reject) => {
-        console.log("Entered getRestaurantIdsByCuisine with cuisines: " + cuisines);
         let cuisines_arr = Array.from(cuisines);
         let endpoint = new AWS.Endpoint(domain);
         let request = new AWS.HttpRequest(endpoint, region);
         request.method = 'POST';
         request.headers['Content-Type'] = 'application/json';
         let cuisines_query = cuisines_arr.join(" or ");
-        console.log("Cuisines query: " + cuisines_query);
         request.path += "restaurant/_search";
         let requestObj = buildRequest(cuisines_query);
         let client = new AWS.HttpClient();
@@ -42,7 +40,7 @@ const getRestaurantIdsByCuisine = (cuisines) => {
             console.log("data received from ES ====", data);
             let extracted_data = extract_data(data);
             if (extracted_data == null) {
-                let err = new Error("No hits in elasticsearch");
+                let err = new Error("No hits in elastic search");
                 console.log("No hits", err);
                 reject(err);
             }
@@ -57,7 +55,6 @@ const getRestaurantIdsByCuisine = (cuisines) => {
 
 const extract_data = (data) => {
     let hits = JSON.parse(data).hits.hits;
-    console.log(hits);
     if (hits.length === 0) {
         console.log("No hits");
         return null;
@@ -68,70 +65,92 @@ const extract_data = (data) => {
         let source = one_hit._source;
         rest_map[source.cuisine] = source.restaurant;
     }
-    console.log(rest_map);
     return rest_map;
 };
 
 const buildRequest = (cuisines_query) => {
-    var o = {};
-    var key = "query";
-    var data = {
+    let o = {};
+    let key = "query";
+    let data = {
         default_field: "cuisine",
         query: cuisines_query
     };
     o[key] = {query_string: data};
-    let jsonString = JSON.stringify(o);
-    console.log("Query string: " + jsonString);
-    return jsonString;
+    return JSON.stringify(o);
+};
+const buildKeys = (restaurantIds) => {
+    let id;
+    let keys = [];
+    for (id of restaurantIds.values()) {
+        keys.push({"id": {S: id}});
+    }
+    return keys;
+};
+
+const extract_dynamo = (data) =>{
+    let record;
+    let dynamo_data = {};
+    let yelp_restaurants = data.Responses["yelp-restaurants"];
+    for(record of yelp_restaurants.values()){
+        dynamo_data[record.id.S] = {"name" : record.name.S, "address" : record.address.S, "zipcode" : record.zip_code.S};
+    }
+    return dynamo_data;
 };
 
 const getRestaurantDetailsByIds = (restaurantIds) => {
     return new Promise((resolve, reject) => {
         // fetches restaurant details from dynamodb for each restaurant Ids
-        // TODO: write code to fetch data from dynamodb
-
-        let data = {
-            "1": {
-                "name": "Indian restaurant 1",
-                "address": "Manhattan address",
-                "zipcode": "11201"
+        let dynamodb = new AWS.DynamoDB({maxRetries: 5, retryDelayOptions: {base: 300}});
+        let keys = buildKeys(restaurantIds);
+        let params = {
+            "RequestItems": {
+                "yelp-restaurants": {
+                    "Keys": keys,
+                    "AttributesToGet": [
+                        'id',
+                        'name',
+                        'address',
+                        'zip_code'
+                    ],
+                }
             },
-            "2": {
-                "name": "Indian restaurant 2",
-                "address": "Manhattan address",
-                "zipcode": "11202"
-            },
-            "3": {
-                "name": "Indian restaurant 3",
-                "address": "Manhattan address",
-                "zipcode": "11203"
-            },
-            "4": {
-                "name": "Indian restaurant 4",
-                "address": "Manhattan address",
-                "zipcode": "11204"
-            },
-            "5": {
-                "name": "Mexican restaurant 5",
-                "address": "Manhattan address",
-                "zipcode": "11205"
-            },
-            "6": {
-                "name": "Mexican restaurant 6",
-                "address": "Manhattan address",
-                "zipcode": "11205"
-            },
-            "7": {
-                "name": "Mexican restaurant 7",
-                "address": "Manhattan address",
-                "zipcode": "11205"
-            }
+            "ReturnConsumedCapacity": "TOTAL"
         };
-        resolve(data);
+
+        let promise = new Promise((resolve, reject) => {
+            dynamodb.batchGetItem(params, function (err, data) {
+                if (err) {
+                    console.error("Unable to get item. Error JSON:", JSON.stringify(err,
+                        null, 2));
+                    reject(err)
+                } else {
+                    console.log("Restaurant data:", JSON.stringify(data, null, 2));
+                    resolve(data)
+                }
+            });
+        });
+
+        promise.then((data) => {
+            console.log("data received from Dynamo ====", JSON.stringify(data));
+            let dynamo_data = extract_dynamo(data);
+            if (dynamo_data == null) {
+                let err = new Error("No results in dynamo");
+                console.log("No Records in dynamo ", err);
+                reject(err);
+            }
+            resolve(dynamo_data);
+        })
+            .catch(err => {
+                console.log("error received from Dynamo =========", err);
+                reject(err);
+            });
     });
 };
 
 const recommendRestaurantsToUsers = (users, cuisineToRestaurantsMapping, restaurantsInfo) => {
+    console.log("Users:" + JSON.stringify(users));
+    console.log("cuisineToRestaurantsMapping:" + JSON.stringify(cuisineToRestaurantsMapping));
+    console.log("restaurantsInfo:" + JSON.stringify(restaurantsInfo));
     return new Promise((resolve, reject) => {
         let cuisineRestaurantsMapping = {};
         Object.keys(cuisineToRestaurantsMapping).forEach(cuisine => {
@@ -190,11 +209,9 @@ exports.handler = (event, context, callback) => {
             users.push(user);
         }
     });
-    console.log(cuisines);
     getRestaurantIdsByCuisine(cuisines)
         .then(data => {
             cuisineToRestaurantsMapping = data;
-            console.log("Mappings received: " + JSON.stringify(cuisineToRestaurantsMapping));
             let restaurantIds = new Set();
             Object.values(data).forEach(ids => {
                 ids.forEach(id => {
