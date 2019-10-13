@@ -15,3 +15,7 @@ sam deploy --template-file output-template.yml --stack-name cc-chatbot-niknar --
 
 Command to delete the entire stack:
 - sam delete-stack --stack-name chatbot
+
+## Architecture
+
+![Reeco Architecture](https://github.com/NikhilNar/Chatbot/blob/master/views/images/architecture.png)
