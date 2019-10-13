@@ -44,15 +44,15 @@ const getRestaurantIdsByCuisine = (cuisines) => {
             if (extracted_data == null) {
                 let err = new Error("No hits in elasticsearch");
                 console.log("No hits", err);
-                reject(err)
+                reject(err);
             }
             resolve(extracted_data);
         })
             .catch(err => {
                 console.log("error received from ES =========", err);
-                reject(err)
-            })
-    })
+                reject(err);
+            });
+    });
 };
 
 const extract_data = (data) => {
@@ -60,16 +60,16 @@ const extract_data = (data) => {
     console.log(hits);
     if (hits.length === 0) {
         console.log("No hits");
-        return null
+        return null;
     }
     let rest_map = {};
     let one_hit;
     for (one_hit of hits.values()) {
         let source = one_hit._source;
-        rest_map[source.cuisine] = source.restaurant
+        rest_map[source.cuisine] = source.restaurant;
     }
     console.log(rest_map);
-    return rest_map
+    return rest_map;
 };
 
 const buildRequest = (cuisines_query) => {
@@ -128,7 +128,7 @@ const getRestaurantDetailsByIds = (restaurantIds) => {
             }
         };
         resolve(data);
-    })
+    });
 };
 
 const recommendRestaurantsToUsers = (users, cuisineToRestaurantsMapping, restaurantsInfo) => {
@@ -136,32 +136,32 @@ const recommendRestaurantsToUsers = (users, cuisineToRestaurantsMapping, restaur
         let cuisineRestaurantsMapping = {};
         Object.keys(cuisineToRestaurantsMapping).forEach(cuisine => {
             if (!cuisineRestaurantsMapping[cuisine]) {
-                cuisineRestaurantsMapping[cuisine] = []
+                cuisineRestaurantsMapping[cuisine] = [];
             }
             let restaurantIds = cuisineToRestaurantsMapping[cuisine];
             restaurantIds.forEach(id => {
-                cuisineRestaurantsMapping[cuisine].push(restaurantsInfo[id])
-            })
+                cuisineRestaurantsMapping[cuisine].push(restaurantsInfo[id]);
+            });
         });
 
         for (let i = 0; i < users.length; i++) {
-            users[i].restaurants = cuisineRestaurantsMapping[users[i].cuisine]
+            users[i].restaurants = cuisineRestaurantsMapping[users[i].cuisine];
         }
 
-        resolve(users)
-    })
+        resolve(users);
+    });
 };
 
 const generateMessage = (user) => {
     let message = `Hello! Here are my ${user.cuisine} restaurant suggestions for ${user.people} people, for ${user.date} at ${user.time} hrs. `;
 
     user.restaurants.forEach((restaurant, index) => {
-        message += ` ${index + 1}. ${restaurant.name}, located at ${restaurant.address}, ${restaurant.zipcode}.`
+        message += ` ${index + 1}. ${restaurant.name}, located at ${restaurant.address}, ${restaurant.zipcode}.`;
     });
 
     message += " Enjoy your meal!";
     console.log(`Message generated for user ${user.phone}=`, message);
-    return message
+    return message;
 };
 
 exports.handler = (event, context, callback) => {
@@ -187,7 +187,7 @@ exports.handler = (event, context, callback) => {
                 "location": userQueries.location,
                 "restaurants": []
             };
-            users.push(user)
+            users.push(user);
         }
     });
     console.log(cuisines);
@@ -199,14 +199,14 @@ exports.handler = (event, context, callback) => {
             Object.values(data).forEach(ids => {
                 ids.forEach(id => {
                     restaurantIds.add(id);
-                })
+                });
             });
 
-            return getRestaurantDetailsByIds(restaurantIds)
+            return getRestaurantDetailsByIds(restaurantIds);
         })
         .then(data => {
             restaurantsInfo = data;
-            return recommendRestaurantsToUsers(users, cuisineToRestaurantsMapping, restaurantsInfo)
+            return recommendRestaurantsToUsers(users, cuisineToRestaurantsMapping, restaurantsInfo);
         })
         .then(data => {
             let snsPromises = [];
@@ -225,19 +225,19 @@ exports.handler = (event, context, callback) => {
                 console.log("params sent to SNS =", params);
 
                 let promise = new AWS.SNS({apiVersion: '2010-03-31'}).publish(params).promise();
-                snsPromises.push(promise)
+                snsPromises.push(promise);
             });
 
-            return Promise.all(snsPromises)
+            return Promise.all(snsPromises);
         })
         .then(data => {
             data.forEach((snsEvent => {
                 console.log("message sent =", JSON.stringify({MessageID: data.MessageId}));
-            }))
+            }));
         })
         .catch(err => {
             console.log("err sending message =", JSON.stringify({Error: err}));
         });
 
-    return {}
+    return {};
 };
