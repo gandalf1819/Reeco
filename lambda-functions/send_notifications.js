@@ -1,13 +1,12 @@
 'use strict';
 
-var AWS = require('aws-sdk');
+let AWS = require('aws-sdk');
 AWS.config.region = "us-east-1";
-var region = 'us-east-1';
-var domain = 'search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com';
+let region = 'us-east-1';
+let domain = 'search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com';
 
 const getRestaurantIdsByCuisine = (cuisines) => {
     return new Promise((resolve, reject) => {
-        let item;
         console.log("Entered getRestaurantIdsByCuisine with cuisines: " + cuisines);
         let cuisines_arr = Array.from(cuisines);
         let endpoint = new AWS.Endpoint(domain);
@@ -18,7 +17,7 @@ const getRestaurantIdsByCuisine = (cuisines) => {
         console.log("Cuisines query: " + cuisines_query);
         request.path += "restaurant/_search";
         let requestObj = buildRequest(cuisines_query);
-        var client = new AWS.HttpClient();
+        let client = new AWS.HttpClient();
         request.body = requestObj;
 
         let promise = new Promise((resolve, reject) => {
@@ -40,38 +39,39 @@ const getRestaurantIdsByCuisine = (cuisines) => {
         });
 
         promise.then((data) => {
-            console.log("data received from ES ====", data)
+            console.log("data received from ES ====", data);
             let extracted_data = extract_data(data);
             if (extracted_data == null) {
-                let err = new Error("No hits in elasticsearch")
-                console.log("No hits", err)
+                let err = new Error("No hits in elasticsearch");
+                console.log("No hits", err);
                 reject(err)
             }
             resolve(extracted_data);
         })
             .catch(err => {
-                console.log("error received from ES =========", err)
+                console.log("error received from ES =========", err);
                 reject(err)
             })
     })
-}
+};
 
 const extract_data = (data) => {
-    let hits = JSON.parse(data).hits.hits
-    console.log(hits)
+    let hits = JSON.parse(data).hits.hits;
+    console.log(hits);
     if (hits.length === 0) {
-        console.log("No hits")
+        console.log("No hits");
         return null
     }
-    let rest_map = {}
-    var one_hit;
+    let rest_map = {};
+    let one_hit;
     for (one_hit of hits.values()) {
-        let source = one_hit._source
+        let source = one_hit._source;
         rest_map[source.cuisine] = source.restaurant
     }
-    console.log(rest_map)
+    console.log(rest_map);
     return rest_map
-}
+};
+
 const buildRequest = (cuisines_query) => {
     var o = {};
     var key = "query";
@@ -81,9 +81,9 @@ const buildRequest = (cuisines_query) => {
     };
     o[key] = {query_string: data};
     let jsonString = JSON.stringify(o);
-    console.log("Query string: " + jsonString)
+    console.log("Query string: " + jsonString);
     return jsonString;
-}
+};
 
 const getRestaurantDetailsByIds = (restaurantIds) => {
     return new Promise((resolve, reject) => {
@@ -126,23 +126,23 @@ const getRestaurantDetailsByIds = (restaurantIds) => {
                 "address": "Manhattan address",
                 "zipcode": "11205"
             }
-        }
+        };
         resolve(data);
     })
-}
+};
 
 const recommendRestaurantsToUsers = (users, cuisineToRestaurantsMapping, restaurantsInfo) => {
     return new Promise((resolve, reject) => {
-        let cuisineRestaurantsMapping = {}
+        let cuisineRestaurantsMapping = {};
         Object.keys(cuisineToRestaurantsMapping).forEach(cuisine => {
             if (!cuisineRestaurantsMapping[cuisine]) {
                 cuisineRestaurantsMapping[cuisine] = []
             }
-            let restaurantIds = cuisineToRestaurantsMapping[cuisine]
+            let restaurantIds = cuisineToRestaurantsMapping[cuisine];
             restaurantIds.forEach(id => {
                 cuisineRestaurantsMapping[cuisine].push(restaurantsInfo[id])
             })
-        })
+        });
 
         for (let i = 0; i < users.length; i++) {
             users[i].restaurants = cuisineRestaurantsMapping[users[i].cuisine]
@@ -150,34 +150,34 @@ const recommendRestaurantsToUsers = (users, cuisineToRestaurantsMapping, restaur
 
         resolve(users)
     })
-}
+};
 
 const generateMessage = (user) => {
-    let message = `Hello! Here are my ${user.cuisine} restaurant suggestions for ${user.people} people, for ${user.date} at ${user.time} hrs. `
+    let message = `Hello! Here are my ${user.cuisine} restaurant suggestions for ${user.people} people, for ${user.date} at ${user.time} hrs. `;
 
     user.restaurants.forEach((restaurant, index) => {
         message += ` ${index + 1}. ${restaurant.name}, located at ${restaurant.address}, ${restaurant.zipcode}.`
-    })
+    });
 
     message += " Enjoy your meal!";
-    console.log(`Message generated for user ${user.phone}=`, message)
+    console.log(`Message generated for user ${user.phone}=`, message);
     return message
-}
+};
 
 exports.handler = (event, context, callback) => {
-    console.log("Event received in LF2")
-    console.log(event)
-    const records = event.Records
-    console.log("Number of records: " + records.length)
+    console.log("Event received in LF2");
+    console.log(event);
+    const records = event.Records;
+    console.log("Number of records: " + records.length);
     let cuisines = new Set(),
         users = [],
         cuisineToRestaurantsMapping = {},
-        restaurantsInfo = {}
+        restaurantsInfo = {};
 
     records.forEach(record => {
-        let userQueries = JSON.parse(record.body)
+        let userQueries = JSON.parse(record.body);
         if (userQueries.phone && userQueries.cuisine && userQueries.people && userQueries.date && userQueries.time && userQueries.location) {
-            cuisines.add(userQueries.cuisine)
+            cuisines.add(userQueries.cuisine);
             let user = {
                 "phone": userQueries.phone,
                 "cuisine": userQueries.cuisine,
@@ -186,21 +186,21 @@ exports.handler = (event, context, callback) => {
                 "time": userQueries.time,
                 "location": userQueries.location,
                 "restaurants": []
-            }
+            };
             users.push(user)
         }
     });
-    console.log(cuisines)
+    console.log(cuisines);
     getRestaurantIdsByCuisine(cuisines)
         .then(data => {
-            cuisineToRestaurantsMapping = data
-            console.log("Mappings received: " + JSON.stringify(cuisineToRestaurantsMapping))
-            let restaurantIds = new Set()
+            cuisineToRestaurantsMapping = data;
+            console.log("Mappings received: " + JSON.stringify(cuisineToRestaurantsMapping));
+            let restaurantIds = new Set();
             Object.values(data).forEach(ids => {
                 ids.forEach(id => {
                     restaurantIds.add(id);
                 })
-            })
+            });
 
             return getRestaurantDetailsByIds(restaurantIds)
         })
@@ -209,7 +209,7 @@ exports.handler = (event, context, callback) => {
             return recommendRestaurantsToUsers(users, cuisineToRestaurantsMapping, restaurantsInfo)
         })
         .then(data => {
-            let snsPromises = []
+            let snsPromises = [];
             data.forEach(user => {
                 let params = {
                     Message: generateMessage(user),
@@ -222,11 +222,11 @@ exports.handler = (event, context, callback) => {
                     }
                 };
 
-                console.log("params sent to SNS =", params)
+                console.log("params sent to SNS =", params);
 
                 let promise = new AWS.SNS({apiVersion: '2010-03-31'}).publish(params).promise();
                 snsPromises.push(promise)
-            })
+            });
 
             return Promise.all(snsPromises)
         })
@@ -237,7 +237,7 @@ exports.handler = (event, context, callback) => {
         })
         .catch(err => {
             console.log("err sending message =", JSON.stringify({Error: err}));
-        })
+        });
 
     return {}
 };
