@@ -1,20 +1,88 @@
 'use strict';
 
-var AWS = require('aws-sdk')
+var AWS = require('aws-sdk');
+AWS.config.region = "us-east-1";
+var region = 'us-east-1';
+var domain = 'search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com';
 
 const getRestaurantIdsByCuisine = (cuisines) => {
     return new Promise((resolve, reject) => {
-        // the promise will fetch the data from elasticsearch and will return the restaurant ids for the 
-        // specific cuisine.
-        // TODO: write code to fetch data from elasticsearch
+        let item;
+        console.log("Entered getRestaurantIdsByCuisine with cuisines: " + cuisines);
+        let cuisines_arr = Array.from(cuisines);
+        let endpoint = new AWS.Endpoint(domain);
+        let request = new AWS.HttpRequest(endpoint, region);
+        request.method = 'POST';
+        request.headers['Content-Type'] = 'application/json';
+        let cuisines_query = cuisines_arr.join(" or ");
+        console.log("Cuisines query: " + cuisines_query);
+        request.path += "restaurant/_search";
+        let requestObj = buildRequest(cuisines_query);
+        var client = new AWS.HttpClient();
+        request.body = requestObj;
 
-        let data = {
-            "Indian": ["1", "2", "3", "4"],
-            "Mexican": ["5", "6", "7"]
-        }
+        let promise = new Promise((resolve, reject) => {
+            client.handleRequest(request, null, function (response) {
+                console.log(response.statusCode + ' ' + response.statusMessage);
+                var responseBody = '';
+                response.on('data', function (chunk) {
+                    responseBody += chunk;
+                });
+                response.on('end', function (chunk) {
+                    console.log('Response body: ' + responseBody);
+                    resolve(responseBody);
+                });
 
-        resolve(data)
+            }, function (error) {
+                console.log('Error: ' + error);
+                reject(error);
+            });
+        });
+
+        promise.then((data) => {
+            console.log("data received from ES ====", data)
+            let extracted_data = extract_data(data);
+            if (extracted_data == null) {
+                let err = new Error("No hits in elasticsearch")
+                console.log("No hits", err)
+                reject(err)
+            }
+            resolve(extracted_data);
+        })
+            .catch(err => {
+                console.log("error received from ES =========", err)
+                reject(err)
+            })
     })
+}
+
+const extract_data = (data) => {
+    let hits = JSON.parse(data).hits.hits
+    console.log(hits)
+    if (hits.length === 0) {
+        console.log("No hits")
+        return null
+    }
+    let rest_map = {}
+    var one_hit;
+    for (one_hit of hits.values()) {
+        let source = one_hit._source
+        rest_map[source.cuisine] = source.restaurant
+    }
+    console.log(rest_map)
+    return rest_map
+}
+const buildRequest = (cuisines_query) => {
+    var o = {};
+    var key = "query";
+    var data = {
+        default_field: "cuisine",
+        query: cuisines_query
+    };
+    o[key] = {query_string: data};
+    let jsonString = JSON.stringify(o);
+    console.log("Query string: " + jsonString)
+    return jsonString;
 }
 
 const getRestaurantDetailsByIds = (restaurantIds) => {
@@ -108,25 +176,25 @@ exports.handler = (event, context, callback) => {
 
     records.forEach(record => {
         let userQueries = JSON.parse(record.body)
-
-        if (userQueries.Phone && userQueries.Cuisine && userQueries.People && userQueries.Date && userQueries.Time) {
-            cuisines.add(userQueries.Cuisine)
+        if (userQueries.phone && userQueries.cuisine && userQueries.people && userQueries.date && userQueries.time && userQueries.location) {
+            cuisines.add(userQueries.cuisine)
             let user = {
-                "phone": userQueries.Phone,
-                "cuisine": userQueries.Cuisine,
-                "people": userQueries.People,
-                "date": userQueries.Date,
-                "time": userQueries.Time,
-                "location": userQueries.Location,
+                "phone": userQueries.phone,
+                "cuisine": userQueries.cuisine,
+                "people": userQueries.people,
+                "date": userQueries.date,
+                "time": userQueries.time,
+                "location": userQueries.location,
                 "restaurants": []
             }
             users.push(user)
         }
     });
-
+    console.log(cuisines)
     getRestaurantIdsByCuisine(cuisines)
         .then(data => {
             cuisineToRestaurantsMapping = data
+            console.log("Mappings received: " + JSON.stringify(cuisineToRestaurantsMapping))
             let restaurantIds = new Set()
             Object.values(data).forEach(ids => {
                 ids.forEach(id => {
@@ -156,7 +224,7 @@ exports.handler = (event, context, callback) => {
 
                 console.log("params sent to SNS =", params)
 
-                let promise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();
+                let promise = new AWS.SNS({apiVersion: '2010-03-31'}).publish(params).promise();
                 snsPromises.push(promise)
             })
 
@@ -164,11 +232,11 @@ exports.handler = (event, context, callback) => {
         })
         .then(data => {
             data.forEach((snsEvent => {
-                console.log("message sent =", JSON.stringify({ MessageID: data.MessageId }));
+                console.log("message sent =", JSON.stringify({MessageID: data.MessageId}));
             }))
         })
         .catch(err => {
-            console.log("err sending message =", JSON.stringify({ Error: err }));
+            console.log("err sending message =", JSON.stringify({Error: err}));
         })
 
     return {}
