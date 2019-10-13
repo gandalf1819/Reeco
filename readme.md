@@ -19,3 +19,10 @@ Command to delete the entire stack:
 ## Architecture
 
 ![Reeco Architecture](https://github.com/NikhilNar/Chatbot/blob/master/views/images/architecture.png)
+
+## Team
+
+* [Nikhil Nar](https://github.com/NikhilNar)
+* [Suraj Gaikwad](https://github.com/surajgovardhangaikwad)
+* [Chinmay Wyawahare](https://github.com/gandalf1819)
+* [Vineet Viswakumar](https://github.com/vineet247)
