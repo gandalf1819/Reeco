@@ -1,13 +1,20 @@
-from datetime import datetime, date
 import logging
 import os
 import time
+from datetime import datetime, date
+import json
 
+import boto3 as boto3
 import dateutil.parser
 import phonenumbers
 
+import re
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+QUEUE_NAME = "SQSQueue"
+SQS = boto3.client("sqs")
 
 
 def elicit_slot(session_attributes, intent_name, slots, slot_to_elicit, message):
@@ -113,12 +120,24 @@ def isvalid_people(people):
         return False
     return True
 
+def clean_phone(phone):
+  phone = re.sub(r'[^0-9]', "", phone)
+  if phone[0] == '1':
+    phone = phone[1:]
+  return phone
 
 def isvalid_phone(phone):
+    if len(phone) > 11:
+      return False
+    if len(phone) == 11 and phone[0] != '1':
+      return False
     if not phonenumbers.PhoneNumberMatcher(phone, "US"):
         return False
     return True
 
+def format_phone(phone):
+  us_prefix = "+1"
+  return us_prefix + phone
 
 def validate_info(slots):
     location = try_ex(lambda: slots['Location'])
@@ -168,6 +187,7 @@ def validate_info(slots):
                                            'a valid number of people')
 
     if phone:
+        phone = clean_phone(phone)
         if not isvalid_phone(phone):
             return build_validation_result(False, 'Phone',
                                            'The phone number you\'ve entered is invalid. Please enter a valid United '
@@ -177,7 +197,11 @@ def validate_info(slots):
 
 
 def format_and_send_to_sqs(location, input_date, reserve_time, cuisine, people, phone):
-    pass
+    phone = format_phone(phone)
+    data = {'location': location, 'date': input_date, 'time': reserve_time, 'cuisine': cuisine, 'people': people,
+            'phone': phone}
+    json_data = json.dumps(data)
+    send_to_sqs(json_data)
 
 
 def suggest_restaurants(intent_request):
@@ -269,3 +293,22 @@ def lambda_handler(event, context):
     logger.debug('event.bot.name={}'.format(event['bot']['name']))
 
     return dispatch(event)
+
+
+def get_queue_url():
+    """Retrieve the URL for the configured queue name"""
+    q = SQS.get_queue_url(QueueName=QUEUE_NAME).get('QueueUrl')
+    logger.debug("Queue URL is %s", q)
+    return q
+
+
+def send_to_sqs(data):
+    """The lambda handler"""
+    logger.debug("Sending data to SQS %s", data)
+    try:
+        url = get_queue_url()
+        logger.debug("Got queue URL %s", url)
+        resp = SQS.send_message(QueueUrl=url, MessageBody=data)
+        logger.debug("Send result: %s", resp)
+    except Exception as e:
+        raise Exception("Could not record link! %s" % e)
