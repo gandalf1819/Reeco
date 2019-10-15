@@ -20,6 +20,10 @@ Command to delete the entire stack:
 
 ![Reeco Architecture](https://github.com/NikhilNar/Chatbot/blob/master/views/images/architecture.png)
 
+## Bot Conversation
+
+![Reeco Conversation](https://github.com/NikhilNar/Chatbot/blob/master/views/images/conversation.png)
+
 ## Team
 
 * [Nikhil Nar](https://github.com/NikhilNar)
