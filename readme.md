@@ -11,7 +11,7 @@ uploads it to the S3 bucket. The artifact ID will then be put into the file and 
 - sam package --template-file template.yml --s3-bucket cc-chatbot-niknar --output-template-file output-template.yml
 
 Run this to deploy after the previous command: (Note that you need to deploy the output-template and not the template)
-sam deploy --template-file output-template.yml --stack-name cc-chatbot-niknar --capabilities CAPABILITY_IAM
+sam deploy --template-file output-template.yml --stack-name chatbot --capabilities CAPABILITY_IAM
 
 Command to delete the entire stack:
 - sam delete-stack --stack-name chatbot

@@ -14,7 +14,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/f68c27d396bd34bff02484a6e2260af8
+      CodeUri: s3://cc-chatbot-niknar/547a5fc4276ed5422773e2d9e81ec6bc
       Handler: lex_input_validator.handler
       Events:
         ValidateInputAPI:
@@ -31,26 +31,26 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: python3.7
-      CodeUri: s3://cc-chatbot-niknar/f68c27d396bd34bff02484a6e2260af8
+      CodeUri: s3://cc-chatbot-niknar/547a5fc4276ed5422773e2d9e81ec6bc
       Handler: lex_response_handler.lambda_handler
+      Policies:
+      - AmazonSQSFullAccess
   LF2:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs10.x
-      CodeUri: s3://cc-chatbot-niknar/f68c27d396bd34bff02484a6e2260af8
+      CodeUri: s3://cc-chatbot-niknar/547a5fc4276ed5422773e2d9e81ec6bc
       Handler: send_notifications.handler
       Events:
-        SQSPollingEvent:
-          Type: SQS
+        CloudwatchCronEvent:
+          Type: Schedule
           Properties:
-            Queue:
-              Fn::GetAtt:
-              - SQSQueue
-              - Arn
-            BatchSize: 10
+            Schedule: rate(1 minute)
       Policies:
       - CloudWatchLogsFullAccess
       - AmazonSNSFullAccess
+      - AmazonDynamoDBReadOnlyAccess
+      - AmazonSQSFullAccess
   SQSQueue:
     Type: AWS::SQS::Queue
     Properties:

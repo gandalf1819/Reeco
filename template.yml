@@ -35,8 +35,8 @@ Resources:
       Runtime: python3.7
       CodeUri: ./lambda-functions
       Handler: lex_response_handler.lambda_handler
-    Policies:
-      - AmazonSQSFullAccess
+      Policies:
+        - AmazonSQSFullAccess
 
   # Logic will be changed    
   LF2:
@@ -46,15 +46,15 @@ Resources:
       CodeUri: ./lambda-functions
       Handler: send_notifications.handler
       Events:
-        SQSPollingEvent:
-          Type: SQS
+        CloudwatchCronEvent:
+          Type: Schedule
           Properties:
-            Queue: !GetAtt SQSQueue.Arn
-            BatchSize: 10
+            Schedule: rate(1 minute)
       Policies:
         - CloudWatchLogsFullAccess
         - AmazonSNSFullAccess
         - AmazonDynamoDBReadOnlyAccess
+        - AmazonSQSFullAccess
 
   # Sample for SQS, to be changed    
   SQSQueue:
