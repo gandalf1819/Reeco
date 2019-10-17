@@ -4,7 +4,7 @@ let AWS = require('aws-sdk');
 AWS.config.region = "us-east-1";
 let region = 'us-east-1';
 let domain = 'search-reeco-6uqlqkoo5s2zrbgplboq5shdtq.us-east-1.es.amazonaws.com';
-let sqsURL = "https://sqs.us-east-1.amazonaws.com/655546244197/SQSQueue";
+let sqsURL ="https://sqs.us-east-1.amazonaws.com/655546244197/SQSQueue";
 
 const getRestaurantIdsByCuisine = (cuisines) => {
     return new Promise((resolve, reject) => {
@@ -38,7 +38,7 @@ const getRestaurantIdsByCuisine = (cuisines) => {
         });
 
         promise.then((data) => {
-            console.log("data received from ES =", data);
+            console.log("data received from ES ====", data);
             let extracted_data = extract_data(data);
             if (extracted_data == null) {
                 let err = new Error("No hits in elastic search");
@@ -48,7 +48,7 @@ const getRestaurantIdsByCuisine = (cuisines) => {
             resolve(extracted_data);
         })
             .catch(err => {
-                console.log("error received from ES =", err);
+                console.log("error received from ES =========", err);
                 reject(err);
             });
     });
@@ -132,7 +132,7 @@ const getRestaurantDetailsByIds = (restaurantIds) => {
         });
 
         promise.then((data) => {
-            console.log("data received from Dynamo =", JSON.stringify(data));
+            console.log("data received from Dynamo ====", JSON.stringify(data));
             let dynamo_data = extract_dynamo(data);
             if (dynamo_data == null) {
                 let err = new Error("No results in dynamo");
@@ -142,7 +142,7 @@ const getRestaurantDetailsByIds = (restaurantIds) => {
             resolve(dynamo_data);
         })
             .catch(err => {
-                console.log("error received from Dynamo =", err);
+                console.log("error received from Dynamo =========", err);
                 reject(err);
             });
     });
@@ -191,68 +191,68 @@ const generateMessage = (user) => {
 };
 
 exports.handler = (event, context, callback) => {
-    // console.log("Event received in LF2");
-    // console.log(event);
+    console.log("Event received in LF2");
+    console.log(event);
     // const records = event.Records;
     // console.log("Number of records: " + records.length);
-    let sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
+    let sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
     var params = {
-        AttributeNames: [
-            "SentTimestamp"
-        ],
-        MaxNumberOfMessages: 10,
-        MessageAttributeNames: [
-            "All"
-        ],
-        QueueUrl: sqsURL,
-        VisibilityTimeout: 20,
-        WaitTimeSeconds: 0
+     AttributeNames: [
+        "SentTimestamp"
+     ],
+     MaxNumberOfMessages: 10,
+     MessageAttributeNames: [
+        "All"
+     ],
+     QueueUrl: sqsURL,
+     VisibilityTimeout: 20,
+     WaitTimeSeconds: 0
     };
 
-    let sqsPromise = new Promise((resolve, reject) => {
-        sqs.receiveMessage(params, function (err, data) {
-            if (err) {
-                console.log("Receive Error", err);
-                reject(err);
-            } else if (data.Messages) {
-                console.log("Message received from SQS =", data.Messages)
-                let records = data.Messages
-                let deleteAllpromises = []
-                records.forEach(record => {
-                    var deleteParams = {
-                        QueueUrl: sqsURL,
-                        ReceiptHandle: record.ReceiptHandle
-                    };
-                    let deletePromise = sqs.deleteMessage(deleteParams, function (err, data) {
-                        if (err) {
-                            console.log("Delete Error", err);
-                        } else {
-                            console.log("Message Deleted", data);
-                        }
-                    });
-                    deleteAllpromises.push(deletePromise);
-                })
+    let sqsPromise = new Promise((resolve, reject)=>{
+        sqs.receiveMessage(params, function(err, data) {
+          if (err) {
+            console.log("Receive Error", err);
+            reject(err);
+          } else if (data.Messages) {
+            console.log("Message received from SQS =====================", data.Messages)
+            let records = data.Messages
+            let deleteAllpromises = []
+            records.forEach(record=>{
+                var deleteParams = {
+                  QueueUrl: sqsURL,
+                  ReceiptHandle: record.ReceiptHandle
+                };
+                let deletePromise = sqs.deleteMessage(deleteParams, function(err, data) {
+                  if (err) {
+                    console.log("Delete Error", err);
+                  } else {
+                    console.log("Message Deleted", data);
+                  }
+                });
+                deleteAllpromises.push(deletePromise);
+            })
 
-                Promise.all(deleteAllpromises)
-                    .then(data => {
-                        resolve(records)
-                    })
-                    .catch(err => {
-                        reject(err);
-                    })
-            }
+            Promise.all(deleteAllpromises)
+            .then(data=>{
+                resolve(records)
+            })
+            .catch(err=>{
+                reject(err);
+            })
+          }
         });
     })
     let cuisines = new Set(),
         users = [],
         cuisineToRestaurantsMapping = {},
         restaurantsInfo = {};
-    sqsPromise.then(records => {
-        console.log("records=", records)
+    sqsPromise.then(records=>{
+        console.log("records======", records)
         records.forEach(record => {
             let userQueries = JSON.parse(record.Body);
-            console.log("userQueries=", userQueries)
+            console.log("userQueries=========", userQueries)
             if (userQueries.phone && userQueries.cuisine && userQueries.people && userQueries.date && userQueries.time && userQueries.location) {
                 cuisines.add(userQueries.cuisine);
                 let user = {
@@ -272,7 +272,7 @@ exports.handler = (event, context, callback) => {
     })
         .then(data => {
             cuisineToRestaurantsMapping = data;
-            console.log("cuisineToRestaurantsMapping=", cuisineToRestaurantsMapping)
+            console.log("cuisineToRestaurantsMapping======", cuisineToRestaurantsMapping)
             let restaurantIds = new Set();
             Object.values(data).forEach(ids => {
                 ids.forEach(id => {
@@ -284,7 +284,7 @@ exports.handler = (event, context, callback) => {
         })
         .then(data => {
             restaurantsInfo = data;
-            console.log("restaurantsInfo=", restaurantsInfo)
+            console.log("restaurantsInfo=========", restaurantsInfo)
             return recommendRestaurantsToUsers(users, cuisineToRestaurantsMapping, restaurantsInfo);
         })
         .then(data => {
