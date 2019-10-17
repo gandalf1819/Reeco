@@ -1,14 +1,13 @@
+import json
 import logging
 import os
+import re
 import time
 from datetime import datetime, date
-import json
 
 import boto3 as boto3
 import dateutil.parser
 import phonenumbers
-
-import re
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -85,13 +84,17 @@ def isvalid_date(date):
 
 
 def isvalid_time(input_time):
-    return len(input_time) == 5 and len(input_time.split(":")) == 2 and len(input_time.split(":")[0]) == 2
+    return len(input_time) == 5 and len(input_time.split(":")) == 2 and len(
+        input_time.split(":")[0]) == 2
 
 
 def isvalid_city(city):
-    valid_cities = ['new york', 'los angeles', 'chicago', 'houston', 'philadelphia', 'phoenix', 'san antonio',
-                    'san diego', 'dallas', 'san jose', 'austin', 'jacksonville', 'san francisco', 'indianapolis',
-                    'columbus', 'fort worth', 'charlotte', 'detroit', 'el paso', 'seattle', 'denver', 'washington dc',
+    valid_cities = ['new york', 'los angeles', 'chicago', 'houston', 'philadelphia',
+                    'phoenix', 'san antonio',
+                    'san diego', 'dallas', 'san jose', 'austin', 'jacksonville',
+                    'san francisco', 'indianapolis',
+                    'columbus', 'fort worth', 'charlotte', 'detroit', 'el paso',
+                    'seattle', 'denver', 'washington dc',
                     'memphis', 'boston', 'nashville', 'baltimore', 'portland']
     return city.lower() in valid_cities
 
@@ -120,24 +123,30 @@ def isvalid_people(people):
         return False
     return True
 
+
 def clean_phone(phone):
-  phone = re.sub(r'[^0-9]', "", phone)
-  if phone[0] == '1':
-    phone = phone[1:]
-  return phone
+    phone = re.sub(r'[^0-9]', "", phone)
+    if phone[0] == '1':
+        phone = phone[1:]
+    return phone
+
 
 def isvalid_phone(phone):
     if len(phone) > 11:
-      return False
+        return False
     if len(phone) == 11 and phone[0] != '1':
-      return False
+        return False
+    if len(phone) != 10:
+        return False
     if not phonenumbers.PhoneNumberMatcher(phone, "US"):
         return False
     return True
 
+
 def format_phone(phone):
-  us_prefix = "+1"
-  return us_prefix + phone
+    us_prefix = "+1"
+    return us_prefix + phone
+
 
 def validate_info(slots):
     location = try_ex(lambda: slots['Location'])
@@ -151,7 +160,8 @@ def validate_info(slots):
         return build_validation_result(
             False,
             'Location',
-            'We currently do not support {} as a valid destination.  Can you try a different city?'.format(location)
+            'We currently do not support {} as a valid destination.  Can you try a different city?'.format(
+                location)
         )
 
     if input_date:
@@ -170,7 +180,8 @@ def validate_info(slots):
                                            'to reserve a table?')
         hour = int(reserve_time.split(":")[0])
         minute = int(reserve_time.split(":")[1])
-        input_date = datetime.strptime(input_date, "%Y-%m-%d").replace(hour=hour, minute=minute)
+        input_date = datetime.strptime(input_date, "%Y-%m-%d").replace(hour=hour,
+                                                                       minute=minute)
         if input_date < datetime.now():
             return build_validation_result(False, 'Time',
                                            'Reservations must be scheduled for future only.  Can you try a different '
@@ -197,8 +208,10 @@ def validate_info(slots):
 
 
 def format_and_send_to_sqs(location, input_date, reserve_time, cuisine, people, phone):
+    phone = clean_phone(phone)
     phone = format_phone(phone)
-    data = {'location': location, 'date': input_date, 'time': reserve_time, 'cuisine': cuisine, 'people': people,
+    data = {'location': location, 'date': input_date, 'time': reserve_time,
+            'cuisine': cuisine, 'people': people,
             'phone': phone}
     json_data = json.dumps(data)
     send_to_sqs(json_data)
@@ -226,7 +239,8 @@ def suggest_restaurants(intent_request):
     people = safe_int(try_ex(lambda: slots['People']))
     phone = try_ex(lambda: slots['Phone'])
     if location and input_date and reserve_time and cuisine and people and phone:
-        format_and_send_to_sqs(location, input_date, reserve_time, cuisine, people, phone)
+        format_and_send_to_sqs(location, input_date, reserve_time, cuisine, people,
+                               phone)
         return close(
             {},
             'Fulfilled',
@@ -268,7 +282,9 @@ def dispatch(intent_request):
     """
 
     logger.debug(
-        'dispatch userId={}, intentName={}'.format(intent_request['userId'], intent_request['currentIntent']['name']))
+        'dispatch userId={}, intentName={}'.format(intent_request['userId'],
+                                                   intent_request['currentIntent'][
+                                                       'name']))
 
     intent_name = intent_request['currentIntent']['name']
 
@@ -290,7 +306,8 @@ def lambda_handler(event, context):
     # By default, treat the user request as coming from the America/New_York time zone.
     os.environ['TZ'] = 'America/New_York'
     time.tzset()
-    logger.debug('event.bot.name={}'.format(event['bot']['name']))
+    logger.debug('Event received:{}'.format(event))
+    # logger.debug('event.bot.name={}'.format(event['bot']['name']))
 
     return dispatch(event)
 
@@ -309,6 +326,7 @@ def send_to_sqs(data):
         url = get_queue_url()
         logger.debug("Got queue URL %s", url)
         resp = SQS.send_message(QueueUrl=url, MessageBody=data)
+        logger.debug("Sending data to SQS %s", data)
         logger.debug("Send result: %s", resp)
     except Exception as e:
         raise Exception("Could not record link! %s" % e)
