@@ -1,7 +1,6 @@
 # Reeco
 
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen) ![Python](https://upload.wikimedia.org/wikipedia/commons/3/34/Blue_Python_3.6_Shield_Badge.svg)
-[![Build Status](https://travis-ci.org/usgs/nwisweb-tableau-data-connector.svg?branch=master)](https://travis-ci.org/usgs/nwisweb-tableau-data-connector)
 
 Reeco is a  Dining Concierge chatbot, that sends you restaurant suggestions given a set of preferences that you provide the chatbot withthrough conversation.
 
